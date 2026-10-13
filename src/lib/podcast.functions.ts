@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 const PODCAST_WEBHOOK_URL =
-  "https://workflow.ccbp.in/webhook/1c8053af-8d37-4525-8023-78921b7ed523";
+  "https://workflow.ccbp.in/webhook-test/1c8053af-8d37-4525-8023-78921b7ed523";
 
 export type GeneratePodcastResult =
   | { ok: true; audioFile: string }
