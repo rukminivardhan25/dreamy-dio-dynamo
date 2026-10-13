@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { AudioLines, Headphones, Heart, Play, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { generatePodcast } from "@/lib/podcast.functions";
 import headphones from "@/assets/headphones.png";
 
 export const Route = createFileRoute("/")({
@@ -18,19 +19,29 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+type Status = "idle" | "loading" | "ready" | "error";
+
 function Index() {
   const [topic, setTopic] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "soon">("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  const [status, setStatus] = useState<Status>("idle");
+  const [audioUrl, setAudioUrl] = useState("");
 
-  function generatePodcast(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (status === "loading") return;
+    if (status === "loading" || !topic.trim()) return;
     setStatus("loading");
-    timer.current = setTimeout(() => setStatus("soon"), 2500);
+    try {
+      const result = await generatePodcast({ data: { text: topic.trim() } });
+      if (result.ok) {
+        setAudioUrl(result.audioFile);
+        setTopic("");
+        setStatus("ready");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
   }
 
   return (
@@ -51,7 +62,7 @@ function Index() {
           <p>A big question. A niche obsession. A passing thought.<br className="desktop-break" /> Whatever’s on your mind, let’s give it a voice.</p>
         </section>
 
-        <form className="topic-form" onSubmit={generatePodcast}>
+        <form className="topic-form" onSubmit={handleSubmit}>
           <label htmlFor="topic">What are you curious about?</label>
           <div className="topic-input-wrap">
             <Sparkles size={20} aria-hidden="true" />
@@ -66,17 +77,46 @@ function Index() {
         <section className="listening-section" aria-labelledby="listening-title">
           <div className="section-label"><Headphones size={15} /><h2 id="listening-title">YOUR LISTENING CORNER</h2><span className="label-line" /></div>
           <div className="audio-area" aria-live="polite" aria-busy={status === "loading"}>
-            <div className="audio-message">
-              {status === "loading" ? <div className="loading-dots" aria-label="Generating podcast"><span /><span /><span /></div> : <span className="player-icon">{status === "soon" ? <Sparkles size={25} /> : <AudioLines size={27} />}</span>}
-              <h3>{status === "loading" ? "A little moment of anticipation…" : status === "soon" ? "Feature coming soon!" : "Podcast will appear here."}</h3>
-              <p>{status === "soon" ? "Something good is on its way. Stay curious." : status === "loading" ? "Good things take a little time." : "Your next rabbit hole, ready when you are."}</p>
-            </div>
-            <div className="player-preview" aria-hidden="true">
-              <span className="play-preview"><Play size={15} fill="currentColor" /></span>
-              <span className="time-preview">0:00</span>
-              <div className="waveform">{Array.from({ length: 58 }, (_, i) => <span key={i} className={`wave wave-${i % 9}`} />)}</div>
-              <span className="time-preview">--:--</span>
-            </div>
+            {status === "loading" && (
+              <div className="audio-message">
+                <div className="loading-dots" aria-label="Generating podcast"><span /><span /><span /></div>
+                <h3>Creating podcast... please wait!</h3>
+                <p>Good things take a little time.</p>
+              </div>
+            )}
+            {status === "ready" && (
+              <div className="audio-message">
+                <span className="player-icon">🎧</span>
+                <h3>Podcast is ready! Click play to listen</h3>
+                <p>Enjoy your episode — it’s all yours.</p>
+              </div>
+            )}
+            {status === "error" && (
+              <div className="audio-message">
+                <span className="player-icon">⚠️</span>
+                <h3>Oops! Something went wrong. Please try again</h3>
+                <p>Take a breath, then give it another go.</p>
+              </div>
+            )}
+            {status === "idle" && (
+              <div className="audio-message">
+                <span className="player-icon"><AudioLines size={27} /></span>
+                <h3>Podcast will appear here.</h3>
+                <p>Your next rabbit hole, ready when you are.</p>
+              </div>
+            )}
+            {status === "ready" && audioUrl ? (
+              <audio className="audio-player" controls src={audioUrl}>
+                Your browser does not support audio playback.
+              </audio>
+            ) : (
+              <div className="player-preview" aria-hidden="true">
+                <span className="play-preview"><Play size={15} fill="currentColor" /></span>
+                <span className="time-preview">0:00</span>
+                <div className="waveform">{Array.from({ length: 58 }, (_, i) => <span key={i} className={`wave wave-${i % 9}`} />)}</div>
+                <span className="time-preview">--:--</span>
+              </div>
+            )}
           </div>
         </section>
         <p className="closing-note">For the beautifully curious minds.</p>
