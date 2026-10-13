@@ -9,5 +9,5 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Keep the podcast simulator on the index route with client-side timed state; no service is required for the intentionally coming-soon generation flow.
+- Podcast generation calls the external webhook via the createServerFn wrapper in src/lib/podcast.functions.ts; keep webhook I/O server-side so browser CORS/network restrictions never break it.
 - Define interface colors in global semantic CSS tokens and use the shared Button for actions so styling stays consistent.
