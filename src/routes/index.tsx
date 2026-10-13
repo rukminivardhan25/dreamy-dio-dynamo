@@ -26,7 +26,7 @@ function Index() {
   const [status, setStatus] = useState<Status>("idle");
   const [audioUrl, setAudioUrl] = useState("");
 
-  async function generatePodcast(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (status === "loading" || !topic.trim()) return;
     setStatus("loading");
@@ -62,7 +62,7 @@ function Index() {
           <p>A big question. A niche obsession. A passing thought.<br className="desktop-break" /> Whatever’s on your mind, let’s give it a voice.</p>
         </section>
 
-        <form className="topic-form" onSubmit={generatePodcast}>
+        <form className="topic-form" onSubmit={handleSubmit}>
           <label htmlFor="topic">What are you curious about?</label>
           <div className="topic-input-wrap">
             <Sparkles size={20} aria-hidden="true" />
