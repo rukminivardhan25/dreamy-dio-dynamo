@@ -35,10 +35,12 @@ export const generatePodcast = createServerFn({ method: "POST" })
 
       const audioFile = resolveAudioFile(contentType, body);
       if (!audioFile) {
+        const preview = new TextDecoder().decode(body).slice(0, 4000);
         console.error(
           "Podcast webhook response missing a playable audioFile",
           contentType,
           body.byteLength,
+          preview,
         );
         return { ok: false, error: "Unexpected response" };
       }
